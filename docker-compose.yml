@@ -1,11 +1,37 @@
-version: '3.7'
+version: '3.8'
+
 services:
-  mermaid:
+  mermaid-live-editor:
+    container_name: mermaid-live-editor-local
     build:
       context: .
-      target: mermaid-dev
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8080"  # Your desired port 8090
     volumes:
       - ./src:/app/src
-    ports:
-      - 3000:3000
-      - 24678:24678
+      - ./static:/app/static
+      - ./package.json:/app/package.json
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+    environment:
+      - NODE_ENV=development
+      - MERMAID_RENDERER_URL=https://mermaid.ink
+      - MERMAID_KROKI_RENDERER_URL=https://kroki.io
+    restart: unless-stopped  # This ensures it restarts automatically
+    networks:
+      - mermaid-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  mermaid-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  mermaid_data:
+    driver: local
